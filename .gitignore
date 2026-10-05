@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+kiwi-events-development-values.txt
+
+# Runtime configuration
+kiwi-events.config.json
+kiwi-events.config.local.json
+kiwi-events.config.*.json
+!kiwi-events.config.example.json
+
+# Kiwi Events runtime data
+data/
+.kiwievents/
+
+# Runtime uploads / generated files
+uploads/
+tmp/
+temp/
+
+# Test / coverage output
+coverage/
+
+# Local release builds
+release/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

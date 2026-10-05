@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiwi Events Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+</head>
+
+<body>
+  <section id="setupView" class="login-view hidden">
+    <div class="login-card setup-card-wide">
+      <p class="eyebrow">Kiwi Events Setup</p>
+      <h1>Initial Setup</h1>
+      <p class="muted">
+        Connect a database and create the first local admin account.
+      </p>
+
+      <div class="info-box">
+        <h3>Step 1: Database</h3>
+        <p>
+          Choose the database provider Kiwi Events should use. Kiwi Events
+          will test the connection before saving it as the active runtime
+          database.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <label class="field">
+          <span>Database Provider</span>
+          <select id="setupDatabaseProvider">
+            <option value="mongodb">MongoDB</option>
+            <option value="mariadb">MariaDB</option>
+            <option value="mysql">MySQL</option>
+          </select>
+          <small id="setupDatabaseProviderHint">Choose the database engine.</small>
+        </label>
+
+        <label class="field">
+          <span>Database URI</span>
+          <input id="setupDatabaseUri" type="text" autocomplete="off" />
+          <small id="setupDatabaseUriHint">
+            Example URI changes depending on the selected provider.
+          </small>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="setupSaveDatabaseButton" type="button">
+          Test & save database
+        </button>
+      </div>
+
+      <div id="setupDatabaseResult" class="info-box hidden"></div>
+
+      <div class="info-box">
+        <h3>Step 2: Initial Admin</h3>
+        <p>
+          This account is used for the first login after initialization. More
+          users can be created later.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <label class="field">
+          <span>Admin Email</span>
+          <input id="setupAdminEmail" type="email" value="admin@admin" autocomplete="email" readonly />
+          <small>The initial admin account always uses admin@admin.</small>
+        </label>
+
+        <label class="field">
+          <span>Admin Password</span>
+          <input id="setupAdminPassword" type="password" placeholder="Choose an initial admin password"
+            autocomplete="new-password" minlength="6" />
+          <small>Choose the password for the initial admin account.</small>
+        </label>
+        <label class="field wide">
+          <span>External JWT Secret</span>
+          <input id="setupExternalJwtSecret" type="password" placeholder="Choose a shared secret for your host backend"
+            autocomplete="off" minlength="32" />
+          <small>
+            This secret is used to verify JWTs from your external host
+            backend. Your host system signs tokens with this value, and
+            kiwi-events verifies them. You can change it later in the General
+            settings, but then you must also update it in the host backend.
+          </small>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="setupInitializeButton" type="button" disabled>
+          Initialize kiwi-events
+        </button>
+      </div>
+
+      <p id="setupState" class="muted">Checking setup status...</p>
+    </div>
+  </section>
+
+  <section id="loginView" class="login-view">
+    <div class="login-card">
+      <p class="eyebrow">Kiwi Events</p>
+      <h1>Admin Login</h1>
+      <p class="muted">Login to configure your Kiwi Events backend.</p>
+
+      <label class="field">
+        <span>Email</span>
+        <input id="adminLoginEmail" type="email" placeholder="admin@admin" autocomplete="email" />
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input id="adminLoginPassword" type="password" placeholder="Password" autocomplete="current-password" />
+      </label>
+
+      <div class="actions">
+        <button id="adminLoginButton" type="button">Login</button>
+      </div>
+
+      <p id="adminLoginState" class="muted">Not logged in.</p>
+    </div>
+  </section>
+
+  <main id="cmsView" class="page hidden">
+    <header class="admin-navbar">
+      <div class="admin-navbar-brand">
+        <img src="/admin/assets/images/kiwi-events-logo.svg" alt="Kiwi Events" class="admin-navbar-logo" />
+      </div>
+
+      <div class="admin-navbar-actions">
+        <span id="connectionBadge" class="badge badge-neutral">Unknown</span>
+
+        <div class="admin-user-menu" id="adminUserMenu">
+          <button id="adminUserMenuButton" type="button" class="admin-user-chip" aria-label="Open user menu"
+            aria-haspopup="true" aria-expanded="false">
+            <span class="admin-user-meta">
+              <div id="adminUserName">Logged in</div>
+              <small id="adminUserEmail">-</small>
+            </span>
+          </button>
+
+          <div id="adminUserDropdown" class="admin-user-dropdown hidden">
+            <button id="adminLogoutButton" type="button" class="admin-dropdown-logout-button">
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Admin sections">
+      <button class="tab active" type="button" data-tab-target="general">
+        General
+      </button>
+      <button class="tab" type="button" data-tab-target="user-management">
+        User/Roles
+      </button>
+      <button class="tab" type="button" data-tab-target="database">
+        Database
+      </button>
+      <button class="tab" type="button" data-tab-target="ticketing">
+        Ticketing
+      </button>
+      <button class="tab" type="button" data-tab-target="mailing">
+        Mailing
+      </button>
+      <button class="tab" type="button" data-tab-target="storage">
+        Storage
+      </button>
+    </nav>
+
+    <section id="tab-general" class="tab-panel active">
+      <section class="card" data-section="general">
+        <div class="section-title">
+          <div>
+            <h2>General</h2>
+            <p class="muted">
+              Basic Admin UI and host-system integration settings.
+            </p>
+          </div>
+
+          <div class="section-actions">
+            <span class="pill restart-pill">May require restart</span>
+            <button type="button" class="secondary" data-edit-button="general">
+              Edit
+            </button>
+            <button type="button" data-save-button="general" disabled>
+              Save
+            </button>
+          </div>
+        </div>
+
+        <div class="grid-2 editable-section" data-edit-section="general">
+          <label class="field">
+            <span>App Name</span>
+            <input id="brandingAppName" data-editable type="text" placeholder="kiwi-events" />
+            <small>Changes the browser tab title of this Admin UI.</small>
+          </label>
+
+          <label class="field wide">
+            <span>External JWT Secret</span>
+            <input id="externalJwtSecret" data-editable type="password" placeholder="Leave masked value unchanged"
+              autocomplete="off" />
+            <small>
+              Shared secret used to verify JWTs from your external host
+              backend. Change this only if you also update the host backend.
+            </small>
+          </label>
+        </div>
+      </section>
+      <section class="config-section danger-zone">
+        <div class="section-header">
+          <div>
+            <h2>Danger Zone</h2>
+
+            <p>
+              Completely reset Kiwi Events and restore it to its factory
+              settings.
+            </p>
+          </div>
+        </div>
+
+        <div class="danger-zone-action">
+          <div>
+            <strong>Reset Kiwi Events</strong>
+
+            <p>
+              Deletes the configured database, local uploads, the Kiwi Events
+              configuration, and the Secret Store.
+            </p>
+          </div>
+
+          <button id="openSystemResetDialogButton" type="button" class="button button-danger">
+            Reset Kiwi Events
+          </button>
+        </div>
+      </section>
+    </section>
+
+    <section id="tab-user-management" class="tab-panel">
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <h2>Role Management</h2>
+            <p class="muted">
+              Define event roles and choose which event operations each role
+              can perform.
+            </p>
+          </div>
+
+          <div class="section-actions">
+            <span class="pill">Admin only</span>
+            <button id="reloadEventRolesButton" type="button" class="secondary">
+              Reload roles
+            </button>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h3>Event permissions only</h3>
+          <p>
+            Custom roles only control event operations such as events, ticket
+            types, orders, tickets, check-in and refunds. Admin UI access and
+            system settings always require the protected admin role.
+          </p>
+        </div>
+
+        <div class="user-form-panel">
+          <h3>Create role</h3>
+          <p class="muted">
+            The role key is created once and cannot be changed later. Use
+            lowercase letters, numbers and underscores.
+          </p>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>Role key</span>
+              <input id="eventRoleCreateKey" type="text" placeholder="checkin_staff" autocomplete="off" />
+            </label>
+
+            <label class="field">
+              <span>Name</span>
+              <input id="eventRoleCreateName" type="text" placeholder="Check-in Staff" autocomplete="off" />
+            </label>
+
+            <label class="field wide">
+              <span>Description</span>
+              <textarea id="eventRoleCreateDescription" placeholder="Optional role description"></textarea>
+            </label>
+
+            <label class="field">
+              <span>Sort order</span>
+              <input id="eventRoleCreateSortOrder" type="number" min="0" max="10000" step="1" value="100" />
+            </label>
+          </div>
+
+          <div class="permission-section">
+            <div class="permission-section-head">
+              <strong>Permissions</strong>
+              <small>Select what this role can do in the event system.</small>
+            </div>
+
+            <div id="eventRoleCreatePermissions" class="permission-grid">
+              <div class="empty-state">
+                Permission groups are not loaded yet.
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="createEventRoleButton" type="button">
+              Create role
+            </button>
+          </div>
+        </div>
+
+        <div class="role-list-wrap">
+          <div class="section-title compact">
+            <div>
+              <h3>Current roles</h3>
+              <p class="muted">
+                Edit permissions or delete custom roles. Deleting a role
+                removes it from all assigned users.
+              </p>
+            </div>
+          </div>
+
+          <div id="eventRoleList">
+            <div class="empty-state">Roles are not loaded yet.</div>
+          </div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <h2>User Management</h2>
+            <p class="muted">
+              Create local kiwi-events-only admin users or link external host
+              users to kiwi-events roles.
+            </p>
+          </div>
+
+          <div class="section-actions">
+            <span class="pill">Admin only</span>
+            <button id="reloadEventUsersButton" type="button" class="secondary">
+              Reload users
+            </button>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h3>Local vs external users</h3>
+          <p>
+            Local users exist only in kiwi-events and can log in to this Admin
+            UI. External users already exist in a host system. kiwi-events
+            only links them by external provider and external user ID.
+          </p>
+        </div>
+
+        <label class="field">
+          <span>User type</span>
+          <select id="eventUserType">
+            <option value="local">Local admin user</option>
+            <option value="external">External host user link</option>
+          </select>
+          <small>
+            Choose whether you want to create a new kiwi-events-only user or
+            link an existing external user.
+          </small>
+        </label>
+
+        <div id="eventUserLocalForm" class="user-form-panel">
+          <h3>Create local admin user</h3>
+          <p class="muted">
+            Local users are kiwi-events-only admin accounts. They can log in
+            to this Admin UI and manage users/config, but they have no account
+            or permissions in your external host system.
+          </p>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>Email</span>
+              <input id="eventUserLocalEmail" type="email" autocomplete="off" />
+            </label>
+
+            <label class="field">
+              <span>First name</span>
+              <input id="eventUserLocalFirstName" type="text" autocomplete="off" />
+            </label>
+
+            <label class="field wide">
+              <span>Last name</span>
+              <input id="eventUserLocalLastName" type="text" autocomplete="off" />
+            </label>
+
+            <label class="field">
+              <span>Initial password</span>
+              <input id="eventUserLocalPassword" type="password" placeholder="At least 5 characters"
+                autocomplete="new-password" />
+            </label>
+
+            <label class="field">
+              <span>Repeat initial password</span>
+              <input id="eventUserLocalRepeatPassword" type="password" placeholder="Repeat password"
+                autocomplete="new-password" />
+            </label>
+
+            <label class="field wide">
+              <span>Notes</span>
+              <textarea id="eventUserLocalNotes" placeholder="Optional internal note"></textarea>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="createLocalEventUserButton" type="button">
+              Create local user
+            </button>
+          </div>
+        </div>
+
+        <div id="eventUserExternalForm" class="user-form-panel hidden">
+          <h3>Link external host user</h3>
+          <p class="muted">
+            Use this when the user already exists in your main backend. The
+            external user ID must be stable and come from that host system.
+          </p>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>External provider</span>
+              <input id="eventUserExternalProvider" type="text" autocomplete="off" />
+            </label>
+
+            <label class="field">
+              <span>External user ID</span>
+              <input id="eventUserExternalUserId" type="text" autocomplete="off" />
+              <small>This should be the stable user ID from the external
+                system.</small>
+            </label>
+
+            <label class="field">
+              <span>Email snapshot</span>
+              <input id="eventUserExternalEmail" type="email" autocomplete="off" />
+            </label>
+
+            <label class="field">
+              <span>Role</span>
+              <select id="eventUserExternalRole">
+                <option value="event_manager">event_manager</option>
+                <option value="event_admin">event_admin</option>
+                <option value="admin">admin</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>First name snapshot</span>
+              <input id="eventUserExternalFirstName" type="text" autocomplete="off" />
+            </label>
+
+            <label class="field">
+              <span>Last name snapshot</span>
+              <input id="eventUserExternalLastName" type="text" autocomplete="off" />
+            </label>
+
+            <label class="field wide">
+              <span>Notes</span>
+              <textarea id="eventUserExternalNotes" placeholder="Optional internal note"></textarea>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="syncExternalEventUserButton" type="button">
+              Link / update external user
+            </button>
+          </div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <h2>Current users</h2>
+            <p class="muted">
+              Local kiwi-events users and external host-user links.
+            </p>
+          </div>
+        </div>
+
+        <div id="eventUserList" class="user-table-wrap">
+          <div class="empty-state">Users are not loaded yet.</div>
+        </div>
+      </section>
+    </section>
+    <section id="tab-database" class="tab-panel">
+      <section class="card" data-section="database">
+        <div class="section-title">
+          <div>
+            <h2>Database</h2>
+            <p class="muted">
+              Switch the active database connection. No data will be migrated.
+            </p>
+          </div>
+
+          <div class="section-actions">
+            <span class="pill danger-pill">Danger zone</span>
+            <button type="button" class="secondary" data-edit-button="database">
+              Edit
+            </button>
+            <button type="button" data-save-button="database" disabled>
+              Switch database
+            </button>
+          </div>
+        </div>
+
+        <p class="warning">
+          Switching the database does not migrate data. The selected database
+          may be empty, and a fresh admin@admin account will be created there.
+        </p>
+
+        <div class="grid-2 editable-section" data-edit-section="database">
+          <label class="field">
+            <span>Provider</span>
+            <select id="databaseProvider" data-editable>
+              <option value="mongodb">MongoDB</option>
+              <option value="mariadb">MariaDB</option>
+              <option value="mysql">MySQL</option>
+            </select>
+            <small id="databaseProviderHint">Choose the database engine.</small>
+          </label>
+
+          <label class="field">
+            <span>Database URI</span>
+            <input id="databaseUri" data-editable type="text" />
+            <small id="databaseUriHint">
+              Example URI changes depending on the selected provider.
+            </small>
+          </label>
+
+          <label class="field wide">
+            <span>Confirmation</span>
+            <input id="confirmation" data-editable type="text" placeholder="Type SWITCH DATABASE" />
+            <small>Required before switching database connections.</small>
+          </label>
+
+          <label class="field">
+            <span>New Admin Email</span>
+            <input id="databaseSwitchAdminEmail" data-editable type="email" value="admin@admin" readonly />
+            <small>The initial account in the new database is always
+              admin@admin.</small>
+          </label>
+
+          <label class="field">
+            <span>New Admin Password</span>
+            <input id="databaseSwitchAdminPassword" data-editable type="password" placeholder="Password for admin@admin"
+              autocomplete="new-password" />
+            <small>You will log in with this password after switching.</small>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="testDatabaseButton" type="button" class="secondary" disabled>
+            Test connection
+          </button>
+        </div>
+      </section>
+    </section>
+
+    <section id="tab-ticketing" class="tab-panel">
+      <section class="card" data-section="ticketing">
+        <div class="section-title">
+          <div>
+            <h2>Ticketing</h2>
+            <p class="muted">Basic ticketing and payment configuration.</p>
+          </div>
+          <div class="section-actions">
+            <button type="button" data-edit-button="ticketing">Edit</button>
+            <button type="button" data-save-button="ticketing" disabled>
+              Save
+            </button>
+          </div>
+        </div>
+
+        <div class="editable-section" data-edit-section="ticketing">
+          <label>
+            <input id="featureTicketing" data-editable type="checkbox" />
+            Ticketing enabled
+          </label>
+
+          <label>
+            <input id="featureDepositTickets" data-editable type="checkbox" />
+            Deposit tickets
+          </label>
+
+          <label>
+            <input id="featureGuestCheckout" data-editable type="checkbox" />
+            Guest checkout
+          </label>
+
+          <label>
+            <input id="featureDiscountCodes" data-editable type="checkbox" />
+            Discount codes
+          </label>
+
+          <label>
+            <input id="featureTicketQr" data-editable type="checkbox" />
+            Ticket QR codes
+          </label>
+
+          <label>
+            <input id="featureTicketPdf" data-editable type="checkbox" />
+            Ticket PDFs
+          </label>
+
+          <div id="ticketQrSecretPanel" class="hidden">
+            <label class="field">
+              <span>Ticket QR Secret</span>
+              <input id="featureTicketQrSecret" data-editable type="password" autocomplete="new-password" />
+            </label>
+          </div>
+
+          <hr />
+
+          <h3>Online payments</h3>
+          <p class="muted">
+            Fixed-price and donation tickets also work with no provider.
+            Deposit tickets require Mollie or Stripe.
+          </p>
+
+          <div id="paymentsConfigFields">
+            <label class="field">
+              <span>Payment Provider</span>
+              <select id="paymentProvider" data-editable>
+                <option value="disabled">None</option>
+                <option value="mollie">Mollie</option>
+                <option value="stripe">Stripe</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Default Currency</span>
+              <input id="paymentDefaultCurrency" data-editable type="text" placeholder="EUR" />
+            </label>
+
+            <div data-payment-provider-field="mollie" class="hidden">
+              <label class="field">
+                <span>Mollie API Key</span>
+                <input id="paymentMollieApiKey" data-editable type="password" autocomplete="new-password" />
+              </label>
+              <label class="field">
+                <span>Mollie Redirect URL</span>
+                <input id="paymentMollieRedirectUrl" data-editable type="text" />
+              </label>
+              <label class="field">
+                <span>Mollie Webhook URL</span>
+                <input id="paymentMollieWebhookUrl" data-editable type="text" />
+              </label>
+            </div>
+
+            <div data-payment-provider-field="stripe" class="hidden">
+              <label class="field">
+                <span>Stripe Secret Key</span>
+                <input id="paymentStripeSecretKey" data-editable type="password" autocomplete="new-password" />
+              </label>
+              <label class="field">
+                <span>Stripe Success URL</span>
+                <input id="paymentStripeSuccessUrl" data-editable type="text" />
+              </label>
+              <label class="field">
+                <span>Stripe Cancel URL</span>
+                <input id="paymentStripeCancelUrl" data-editable type="text" />
+              </label>
+              <label class="field">
+                <span>Stripe Webhook Signing Secret</span>
+                <input id="paymentStripeWebhookSecret" data-editable type="password" autocomplete="new-password" />
+              </label>
+            </div>
+          </div>
+          <hr />
+
+          <h3>Customer cancellations</h3>
+
+          <p class="muted">
+            Allow customers to cancel their own orders. Paid orders may be
+            refunded only when all cancellation rules are satisfied.
+          </p>
+
+          <label class="feature-card">
+            <input id="customerSelfServiceCancellationEnabled" data-editable type="checkbox" />
+
+            <span>
+              <strong>Customer self-service cancellation</strong>
+
+              <small>
+                Allows customers to cancel eligible orders themselves.
+              </small>
+            </span>
+          </label>
+
+          <label class="field">
+            <span>Refund deadline before first relevant session</span>
+
+            <input id="customerSelfServiceRefundDeadlineDays" data-editable type="number" min="0" max="3650" step="1"
+              placeholder="No additional deadline" />
+
+            <small>
+              Optional. Example: 3 means refunds are allowed only until 3 days
+              before the earliest relevant session. Leave empty for no
+              additional day-based deadline.
+            </small>
+          </label>
+        </div>
+      </section>
+    </section>
+
+    <section id="tab-mailing" class="tab-panel">
+      <section class="card" data-section="mailing">
+        <div class="section-title">
+          <div>
+            <h2>Mailing</h2>
+            <p class="muted">
+              Enable outgoing mails, configure SMTP or Resend API and choose
+              active mail flows.
+            </p>
+          </div>
+
+          <div class="section-actions">
+            <span class="pill restart-pill">May require restart</span>
+            <button type="button" class="secondary" data-edit-button="mailing">
+              Edit
+            </button>
+            <button type="button" data-save-button="mailing" disabled>
+              Save
+            </button>
+          </div>
+        </div>
+
+        <div class="feature-category editable-section" data-edit-section="mailing">
+          <label class="toggle feature-master-toggle">
+            <input id="featureMail" data-editable type="checkbox" />
+            <span>
+              <strong>Mail enabled</strong>
+              <small>
+                Allows kiwi-events to send confirmations, reminders,
+                cancellations and test mails.
+              </small>
+            </span>
+          </label>
+        </div>
+
+        <div id="mailDisabledNotice" class="warning hidden">
+          Mailing is disabled. Enable Mail first to edit provider settings,
+          templates and mail flows.
+        </div>
+
+        <div id="mailConfigFields">
+          <div class="grid-2 editable-section" data-edit-section="mailing">
+            <label class="field">
+              <span>Mail Provider</span>
+              <select id="mailProvider" data-editable>
+                <option value="disabled">Disabled</option>
+                <option value="smtp">SMTP</option>
+                <option value="resend">Resend API</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Default From Name</span>
+              <input id="mailDefaultFromName" data-editable type="text" placeholder="kiwi-events" />
+            </label>
+
+            <label class="field">
+              <span>Default From Email</span>
+              <input id="mailDefaultFromEmail" data-editable type="email" placeholder="events@example.com" />
+            </label>
+
+            <label class="field">
+              <span>Default Reply-To</span>
+              <input id="mailDefaultReplyTo" data-editable type="email" placeholder="support@example.com" />
+            </label>
+          </div>
+
+          <div id="smtpFields" class="provider-fields hidden">
+            <div class="provider-title">
+              <h3>SMTP Settings</h3>
+              <p class="muted">
+                Use this for SMTP relays and providers like Rapidmail SMTP,
+                Mailgun SMTP or SendGrid SMTP.
+              </p>
+            </div>
+
+            <div class="grid-2 editable-section" data-edit-section="mailing">
+              <label class="field">
+                <span>SMTP Host</span>
+                <input id="mailSmtpHost" data-editable type="text" placeholder="smtp.example.com" />
+              </label>
+
+              <label class="field">
+                <span>SMTP Port</span>
+                <input id="mailSmtpPort" data-editable type="number" placeholder="587" />
+              </label>
+
+              <label class="field">
+                <span>SMTP Secure</span>
+                <select id="mailSmtpSecure" data-editable>
+                  <option value="false">false</option>
+                  <option value="true">true</option>
+                </select>
+                <small>Usually false for port 587 and true for port 465.</small>
+              </label>
+
+              <label class="field">
+                <span>SMTP User</span>
+                <input id="mailSmtpUser" data-editable type="text" placeholder="user@example.com" />
+              </label>
+
+              <label class="field wide">
+                <span>SMTP Password</span>
+                <input id="mailSmtpPass" data-editable type="password" placeholder="SMTP password" />
+              </label>
+            </div>
+          </div>
+          <div id="resendFields" class="provider-fields hidden">
+            <div class="provider-title">
+              <h3>Resend API Settings</h3>
+              <p class="muted">
+                Use this for sending transactional emails through the Resend
+                HTTP API. Your default from email must belong to a verified
+                Resend domain.
+              </p>
+            </div>
+
+            <div class="grid-2 editable-section" data-edit-section="mailing">
+              <label class="field wide">
+                <span>Resend API Key</span>
+                <input id="mailResendApiKey" data-editable type="password" placeholder="re_xxxxxxxxx"
+                  autocomplete="off" />
+                <small>
+                  Create a sending API key in Resend and paste it here.
+                </small>
+              </label>
+
+              <label class="field">
+                <span>Timeout in ms</span>
+                <input id="mailResendTimeoutMs" data-editable type="number" min="1000" step="500" placeholder="10000" />
+              </label>
+            </div>
+          </div>
+          <div class="feature-category editable-section" data-edit-section="mailing">
+            <div class="feature-category-header">
+              <div>
+                <h3>Mail Flows</h3>
+                <p class="muted">
+                  Choose which automatic mails kiwi-events should send.
+                </p>
+              </div>
+            </div>
+
+            <div class="feature-card-grid">
+              <label class="feature-card">
+                <input id="featureMailOrderConfirmation" data-editable type="checkbox" />
+                <span>
+                  <strong>Ticket purchase confirmation</strong>
+                  <small>Sends a confirmation mail after a successful ticket
+                    purchase.</small>
+                </span>
+              </label>
+              <label class="feature-card">
+                <input id="featureMailOrderRefunded" data-editable type="checkbox" />
+                <span>
+                  <strong>Refund confirmation</strong>
+                  <small>
+                    Sends a confirmation mail after a refund has been
+                    successfully completed.
+                  </small>
+                </span>
+              </label>
+              <label class="feature-card">
+                <input id="featureMailEventCancellation" data-editable type="checkbox" />
+                <span>
+                  <strong>Event cancellation mail</strong>
+                  <small>Sends a cancellation mail to ticket buyers when an admin
+                    cancels an event.</small>
+                </span>
+              </label>
+
+              <label class="feature-card">
+                <input id="featureMailEventReminder" data-editable type="checkbox" />
+                <span>
+                  <strong>Reminder 1 day before event</strong>
+                  <small>Sends an automated reminder mail to ticket holders before
+                    the event starts.</small>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mailTemplatesCard" class="card">
+        <div class="section-title">
+          <div>
+            <h2>Mail Templates</h2>
+            <p class="muted">
+              Edit the templates used for confirmations, cancellations and
+              reminders.
+            </p>
+          </div>
+
+          <div class="section-actions">
+            <span class="pill">Editable content</span>
+            <button id="loadMailTemplatesButton" type="button" class="secondary">
+              Load templates
+            </button>
+          </div>
+        </div>
+
+        <div class="mail-template-layout">
+          <aside class="mail-template-sidebar">
+            <div id="mailTemplateList" class="mail-template-list">
+              <div class="empty-state">
+                No templates loaded yet. Click “Load templates”.
+              </div>
+            </div>
+          </aside>
+
+          <section class="mail-template-editor">
+            <div id="mailTemplateEmptyState" class="empty-state">
+              Select a template to edit subject, HTML, text and variables.
+            </div>
+
+            <div id="mailTemplateEditorForm" class="hidden">
+              <div class="section-title compact-title">
+                <div>
+                  <h3 id="mailTemplateEditorTitle">Template</h3>
+                  <p id="mailTemplateEditorMeta" class="muted"></p>
+                </div>
+
+                <div class="section-actions">
+                  <button id="editMailTemplateButton" type="button" class="secondary">
+                    Edit template
+                  </button>
+                  <button id="saveMailTemplateButton" type="button" disabled>
+                    Save template
+                  </button>
+                </div>
+              </div>
+
+              <div class="template-meta-grid">
+                <div>
+                  <dt>Key</dt>
+                  <dd id="mailTemplateKey">-</dd>
+                </div>
+                <div>
+                  <dt>Module</dt>
+                  <dd id="mailTemplateModule">-</dd>
+                </div>
+                <div>
+                  <dt>Category</dt>
+                  <dd id="mailTemplateCategory">-</dd>
+                </div>
+                <div>
+                  <dt>System</dt>
+                  <dd id="mailTemplateIsSystem">-</dd>
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <label class="field">
+                  <span>Name</span>
+                  <input id="mailTemplateName" data-template-editable type="text" />
+                </label>
+
+                <label class="field">
+                  <span>Status</span>
+                  <select id="mailTemplateStatus" data-template-editable>
+                    <option value="active">active</option>
+                    <option value="inactive">inactive</option>
+                    <option value="draft">draft</option>
+                  </select>
+                </label>
+
+                <label class="field wide">
+                  <span>Description</span>
+                  <input id="mailTemplateDescription" data-template-editable type="text" />
+                </label>
+
+                <label class="field wide">
+                  <span>Subject</span>
+                  <input id="mailTemplateSubject" data-template-editable type="text"
+                    placeholder="Your tickets for {{eventTitle}}" />
+                </label>
+              </div>
+
+              <label class="field">
+                <span>HTML Body</span>
+                <textarea id="mailTemplateHtml" data-template-editable rows="12" spellcheck="false"
+                  placeholder="<p>Hello {{firstName}}</p>"></textarea>
+              </label>
+
+              <label class="field">
+                <span>Variables</span>
+                <textarea id="mailTemplateVariables" data-template-editable rows="5" spellcheck="false"
+                  placeholder='["firstName", "eventTitle"]'></textarea>
+                <small>JSON array or comma-separated values.</small>
+              </label>
+
+              <div class="template-test-box">
+                <label class="field">
+                  <span>Test recipient email</span>
+                  <input id="mailTemplateTestEmail" type="email" placeholder="test@example.com" />
+                </label>
+
+                <button id="sendMailTemplateTestButton" type="button" class="secondary">
+                  Send test mail
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </section>
+
+    <section id="tab-storage" class="tab-panel">
+      <section class="card" data-section="storage">
+        <div class="section-title">
+          <div>
+            <h2>Storage</h2>
+            <p class="muted">
+              Configure local storage and optional public or private
+              S3-compatible storage targets.
+            </p>
+          </div>
+
+          <div class="section-actions">
+            <span class="pill restart-pill"> May require restart </span>
+
+            <button type="button" class="secondary" data-edit-button="storage">
+              Edit
+            </button>
+
+            <button type="button" data-save-button="storage" disabled>
+              Save
+            </button>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h3>Local storage is always available</h3>
+          <p>
+            If no storage target is specified for an upload, kiwi-events uses
+            local storage. Public and private S3-compatible storage targets
+            are optional and can be enabled independently.
+          </p>
+        </div>
+
+        <div class="provider-fields">
+          <div class="provider-title">
+            <h3>Local filesystem storage</h3>
+            <p class="muted">
+              Files are stored inside the kiwi-events server or container
+              below the configured upload directory.
+            </p>
+          </div>
+
+          <div class="grid-2 editable-section" data-edit-section="storage">
+            <label class="field">
+              <span>Local Upload Directory</span>
+              <input id="storageLocalDir" data-editable type="text" placeholder="uploads" />
+            </label>
+          </div>
+        </div>
+
+        <div class="provider-fields">
+          <div class="provider-title">
+            <h3>Public S3-compatible storage</h3>
+            <p class="muted">
+              Use this target for files that should be directly reachable from
+              a browser through a public URL.
+            </p>
+          </div>
+
+          <div class="editable-section" data-edit-section="storage">
+            <label class="toggle wide">
+              <input id="storagePublicEnabled" data-editable type="checkbox" />
+
+              <span>
+                <strong>Enable public storage</strong>
+                <small>
+                  The bucket must be publicly reachable and a Public Base URL
+                  must be configured.
+                </small>
+              </span>
+            </label>
+          </div>
+
+          <div class="warning">
+            Files stored in this target can be reached directly through the
+            configured Public Base URL. Do not use it for content that should
+            not be publicly accessible.
+          </div>
+
+          <div id="storagePublicFields" class="hidden">
+            <div class="grid-2 editable-section" data-edit-section="storage">
+              <label class="field wide">
+                <span>Endpoint</span>
+
+                <input id="storagePublicEndpoint" data-editable type="text"
+                  placeholder="https://<account-id>.r2.cloudflarestorage.com" />
+
+                <small>
+                  Required for Cloudflare R2, MinIO and many S3-compatible
+                  providers. Usually empty for AWS S3.
+                </small>
+              </label>
+
+              <label class="field">
+                <span>Bucket</span>
+
+                <input id="storagePublicBucket" data-editable type="text" placeholder="kiwi-events-public" />
+              </label>
+
+              <label class="field">
+                <span>Region</span>
+
+                <input id="storagePublicRegion" data-editable type="text" placeholder="auto" />
+              </label>
+
+              <label class="field wide">
+                <span>Public Base URL</span>
+
+                <input id="storagePublicBaseUrl" data-editable type="url" placeholder="https://assets.example.com" />
+
+                <small>
+                  Required. kiwi-events uses this URL to build direct browser
+                  URLs for files stored in this target.
+                </small>
+              </label>
+
+              <label class="field">
+                <span>Access Key ID</span>
+
+                <input id="storagePublicAccessKeyId" data-editable type="password" placeholder="Access key ID" />
+              </label>
+
+              <label class="field">
+                <span>Secret Access Key</span>
+
+                <input id="storagePublicSecretAccessKey" data-editable type="password"
+                  placeholder="Secret access key" />
+              </label>
+
+              <label class="toggle wide">
+                <input id="storagePublicForcePathStyle" data-editable type="checkbox" />
+
+                <span>
+                  <strong>Force path-style URLs</strong>
+                  <small>
+                    Enable only when required by the selected S3-compatible
+                    provider.
+                  </small>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="provider-fields">
+          <div class="provider-title">
+            <h3>Private S3-compatible storage</h3>
+            <p class="muted">
+              Use this target for files that should only be read through
+              authenticated S3 API requests from kiwi-events.
+            </p>
+          </div>
+
+          <div class="editable-section" data-edit-section="storage">
+            <label class="toggle wide">
+              <input id="storagePrivateEnabled" data-editable type="checkbox" />
+
+              <span>
+                <strong>Enable private storage</strong>
+                <small>
+                  This target has no Public Base URL. Ensure the bucket itself
+                  is not publicly accessible at your storage provider.
+                </small>
+              </span>
+            </label>
+          </div>
+
+          <div id="storagePrivateFields" class="hidden">
+            <div class="grid-2 editable-section" data-edit-section="storage">
+              <label class="field wide">
+                <span>Endpoint</span>
+
+                <input id="storagePrivateEndpoint" data-editable type="text"
+                  placeholder="https://<account-id>.r2.cloudflarestorage.com" />
+
+                <small>
+                  Required for Cloudflare R2, MinIO and many S3-compatible
+                  providers. Usually empty for AWS S3.
+                </small>
+              </label>
+
+              <label class="field">
+                <span>Bucket</span>
+
+                <input id="storagePrivateBucket" data-editable type="text" placeholder="kiwi-events-private" />
+              </label>
+
+              <label class="field">
+                <span>Region</span>
+
+                <input id="storagePrivateRegion" data-editable type="text" placeholder="auto" />
+              </label>
+
+              <label class="field">
+                <span>Access Key ID</span>
+
+                <input id="storagePrivateAccessKeyId" data-editable type="password" placeholder="Access key ID" />
+              </label>
+
+              <label class="field">
+                <span>Secret Access Key</span>
+
+                <input id="storagePrivateSecretAccessKey" data-editable type="password"
+                  placeholder="Secret access key" />
+              </label>
+
+              <label class="toggle wide">
+                <input id="storagePrivateForcePathStyle" data-editable type="checkbox" />
+
+                <span>
+                  <strong>Force path-style URLs</strong>
+                  <small>
+                    Enable only when required by the selected S3-compatible
+                    provider.
+                  </small>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="provider-fields">
+          <div class="provider-title">
+            <h3>Kiwi-generated files</h3>
+            <p class="muted">
+              Choose where files generated by kiwi-events itself are stored.
+            </p>
+          </div>
+
+          <div class="grid-2 editable-section" data-edit-section="storage">
+            <label class="field">
+              <span>Ticket PDFs</span>
+
+              <select id="storageTicketPdfTarget" data-editable>
+                <option value="local">Local storage</option>
+
+                <option value="public">Public storage</option>
+
+                <option value="private">Private storage</option>
+              </select>
+
+              <small>
+                Public or private storage can only be selected while that
+                storage target is enabled.
+              </small>
+            </label>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="eventUserEditDialog" class="dialog-backdrop hidden" role="dialog" aria-modal="true"
+    aria-labelledby="eventUserEditDialogTitle">
+    <section class="dialog-card">
+      <div class="dialog-header">
+        <div>
+          <h2 id="eventUserEditDialogTitle">Edit user</h2>
+          <p id="eventUserEditDialogMeta" class="muted">
+            Update this kiwi-events EventUser.
+          </p>
+        </div>
+
+        <button id="closeEventUserEditDialogButton" type="button" class="icon-button" aria-label="Close dialog">
+          ×
+        </button>
+      </div>
+
+      <div id="eventUserProtectedNotice" class="warning hidden">
+        The initial admin@admin user is protected. You can only change its
+        password.
+      </div>
+
+      <div id="eventUserExternalOnlyNotice" class="info-box hidden">
+        <h3>External user</h3>
+        <p>
+          This user is linked to an external host system. The host-system
+          password is not known by kiwi-events. A password entered here
+          creates or updates only a kiwi-events-local password.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <label class="field">
+          <span>Email</span>
+          <input id="editEventUserEmail" type="email" autocomplete="off" />
+        </label>
+
+        <label class="field">
+          <span>Role</span>
+          <select id="editEventUserRole">
+            <option value="event_manager">event_manager</option>
+            <option value="event_admin">event_admin</option>
+            <option value="admin">admin</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>First name</span>
+          <input id="editEventUserFirstName" type="text" autocomplete="off" />
+        </label>
+
+        <label class="field">
+          <span>Last name</span>
+          <input id="editEventUserLastName" type="text" autocomplete="off" />
+        </label>
+
+        <label class="field">
+          <span>New password</span>
+          <input id="editEventUserPassword" type="password" placeholder="Leave empty to keep unchanged"
+            autocomplete="new-password" />
+          <small>
+            For local users this changes the kiwi-events login password.
+          </small>
+        </label>
+
+        <label class="field">
+          <span>Repeat new password</span>
+          <input id="editEventUserRepeatPassword" type="password" placeholder="Repeat password"
+            autocomplete="new-password" />
+        </label>
+
+        <label class="field">
+          <span>External provider</span>
+          <input id="editEventUserExternalProvider" type="text" autocomplete="off" />
+        </label>
+
+        <label class="field">
+          <span>External user ID</span>
+          <input id="editEventUserExternalUserId" type="text" autocomplete="off" />
+        </label>
+
+        <label class="field wide">
+          <span>Notes</span>
+          <textarea id="editEventUserNotes" placeholder="Optional internal note"></textarea>
+        </label>
+      </div>
+
+      <div class="dialog-actions">
+        <button id="cancelEventUserEditDialogButton" type="button" class="secondary">
+          Cancel
+        </button>
+        <button id="saveEventUserEditDialogButton" type="button">
+          Save changes
+        </button>
+      </div>
+    </section>
+  </div>
+  <dialog id="systemResetDialog" class="confirmation-dialog">
+    <form method="dialog" class="confirmation-dialog-content">
+      <div class="confirmation-dialog-header">
+        <h2>Reset Kiwi Events?</h2>
+      </div>
+
+      <div class="confirmation-dialog-body">
+        <p>This action cannot be undone.</p>
+
+        <p>The following data will be deleted:</p>
+
+        <ul>
+          <li>Contents of the configured Kiwi Events database</li>
+          <li>Local uploads</li>
+          <li>Kiwi Events configuration</li>
+          <li>Saved secrets</li>
+        </ul>
+
+        <p>
+          Public and private storage objects will not be automatically
+          deleted.
+        </p>
+
+        <label for="systemResetConfirmation">
+          To confirm, enter
+          <strong>reset kiwi-events</strong>
+        </label>
+
+        <input id="systemResetConfirmation" type="text" autocomplete="off" spellcheck="false"
+          placeholder="reset kiwi-events" />
+
+        <div id="systemResetError" class="form-error hidden" role="alert"></div>
+      </div>
+
+      <div class="confirmation-dialog-actions">
+        <button id="cancelSystemResetButton" type="button" class="button">
+          Cancel
+        </button>
+
+        <button id="confirmSystemResetButton" type="button" class="button button-danger" disabled>
+          Reset Kiwi Events
+        </button>
+      </div>
+    </form>
+  </dialog>
+  <div id="notifyRoot" class="notify-root" aria-live="polite" aria-atomic="false"></div>
+  <script type="module" src="/admin/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,258 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #111;
+  background: #fff;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  padding: 6px 10px;
+  border: 1px solid #777;
+  background: #eee;
+  color: #111;
+  cursor: pointer;
+}
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+select,
+textarea {
+  width: 100%;
+  max-width: 720px;
+  padding: 6px;
+  border: 1px solid #aaa;
+  background: #fff;
+  color: #111;
+}
+input[type="checkbox"] {
+  width: auto;
+}
+textarea {
+  min-height: 100px;
+}
+h1,
+h2,
+h3 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+h1 {
+  font-size: 1.5rem;
+}
+p {
+  margin: 6px 0;
+}
+hr {
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 18px 0;
+}
+small,
+.muted {
+  color: #555;
+}
+.hidden {
+  display: none !important;
+}
+.page,
+.login-view {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.login-card,
+.card,
+.info-box,
+.warning,
+.feature-category,
+.provider-fields,
+.event-user-card,
+.event-role-card,
+.mail-template-card {
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin: 0 0 12px;
+  background: #fff;
+}
+.admin-navbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+.admin-navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+.admin-navbar-logo {
+  display: block;
+  height: 42px;
+  width: auto;
+  max-width: 180px;
+}
+.admin-navbar-actions,
+.actions,
+.section-actions,
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.admin-user-dropdown {
+  position: absolute;
+  border: 1px solid #aaa;
+  background: #fff;
+  padding: 6px;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.tab.active {
+  font-weight: bold;
+  border-color: #111;
+}
+.tab-panel {
+  display: none;
+}
+.tab-panel.active {
+  display: block;
+}
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.field {
+  display: block;
+  margin: 0 0 10px;
+}
+.field > span,
+.field > strong {
+  display: block;
+  margin-bottom: 3px;
+}
+.field small {
+  display: block;
+  margin-top: 3px;
+}
+.grid-2 {
+  display: block;
+}
+.editable-section > label:not(.field) {
+  display: block;
+  margin: 8px 0;
+}
+.disabled-area {
+  opacity: 0.55;
+}
+.badge,
+.pill,
+.system-status-chip {
+  display: inline-block;
+  border: 1px solid #aaa;
+  padding: 2px 6px;
+  background: #fff;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: left;
+  vertical-align: top;
+}
+pre,
+code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  border: 1px solid #777;
+  padding: 16px;
+  background: #fff;
+  color: #111;
+}
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.2);
+}
+.notify-root {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  max-width: 420px;
+}
+.notification,
+.toast {
+  border: 1px solid #777;
+  background: #fff;
+  padding: 10px;
+  margin-top: 6px;
+}
+.secret-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  max-width: 720px;
+}
+.secret-input-row input {
+  flex: 1;
+}
+.permission-group,
+.permission-list,
+.event-user-list,
+.event-role-list,
+.mail-template-list {
+  margin: 8px 0;
+}
+@media (max-width: 700px) {
+  body {
+    padding: 8px;
+  }
+  .section-title,
+  .admin-navbar {
+    display: block;
+  }
+  .section-actions,
+  .admin-navbar-actions {
+    margin-top: 8px;
+  }
+}
