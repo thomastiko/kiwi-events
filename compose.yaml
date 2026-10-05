@@ -1,0 +1,13 @@
+services:
+  kiwi-events:
+    build:
+      context: .
+    image: kiwi-events:1.0.0
+    ports:
+      - "5001:5001"
+    volumes:
+      - kiwi-events-data:/data
+    restart: unless-stopped
+
+volumes:
+  kiwi-events-data:
