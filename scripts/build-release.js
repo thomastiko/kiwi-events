@@ -32,6 +32,9 @@ const releaseFiles = [
   "package-lock.json",
   "README.md",
   "LICENSE",
+  "Dockerfile",
+  ".dockerignore",
+  "compose.yaml",
 ];
 
 fs.mkdirSync(releaseDir, {
