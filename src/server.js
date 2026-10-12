@@ -43,14 +43,6 @@ const DEFAULT_DOCUMENTATION_URL = "https://kiwi-events.tikowiz.com/#/docs";
 const require = createRequire(import.meta.url);
 const { version: packageVersion } = require("../package.json");
 
-function getServerBaseUrl() {
-  return env.appUrl || `http://localhost:${env.port}`;
-}
-
-function getAdminUrl() {
-  return `${getServerBaseUrl().replace(/\/$/, "")}/admin`;
-}
-
 function getDocumentationUrl() {
   return (
     env.documentationUrl ||
@@ -74,7 +66,8 @@ function printStartupBanner() {
   console.log("  Headless event ticketing backend");
   console.log("");
   console.log(formatStartupRow("Version", getAppVersion()));
-  console.log(formatStartupRow("Dashboard", getAdminUrl()));
+  console.log(formatStartupRow("Port", env.port));
+  console.log(formatStartupRow("Dashboard", "/admin"));
   console.log(formatStartupRow("Documentation", getDocumentationUrl()));
   console.log("");
 }

@@ -1,10 +1,8 @@
 services:
   kiwi-events:
-    build:
-      context: .
-    image: kiwi-events:1.0.0
+    image: tikowiz/kiwi-events:1.0.1
     ports:
-      - "5001:5001"
+      - "${KIWI_EVENTS_PORT:-5001}:5001"
     volumes:
       - kiwi-events-data:/data
     restart: unless-stopped

@@ -1,12 +1,14 @@
 // src/app.js
-
 import cors from "cors";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { buildAllowedOrigins, normalizeOrigin } from "./config/cors.js";
-import { env } from "./config/env.js";
+import {
+  buildAllowedOrigins,
+  isSameHostOrigin,
+  normalizeOrigin,
+} from "./config/cors.js";
 import { errorHandler } from "./core/errors/errorHandler.js";
 import { notFoundHandler } from "./core/errors/notFoundHandler.js";
 import { requestLoggingMiddleware } from "./core/middleware/requestLogging.middleware.js";
@@ -26,29 +28,33 @@ const projectRoot = path.resolve(__dirname, "..");
 
 const allowedOrigins = buildAllowedOrigins();
 
+function corsOptionsDelegate(req, callback) {
+  const origin = req.get("origin");
+
+  if (!origin) {
+    return callback(null, {
+      origin: false,
+    });
+  }
+
+  const normalizedOrigin = normalizeOrigin(origin);
+
+  const isSameHost = isSameHostOrigin(normalizedOrigin, req.get("host"));
+
+  const isConfiguredOrigin = allowedOrigins.includes(normalizedOrigin);
+
+  if (isSameHost || isConfiguredOrigin) {
+    return callback(null, {
+      origin: true,
+      credentials: true,
+    });
+  }
+
+  return callback(new Error(`CORS blocked for origin: ${normalizedOrigin}`));
+}
+
 app.use(securityHeadersMiddleware);
 app.use(requestLoggingMiddleware);
-
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      const normalizedOrigin = normalizeOrigin(origin);
-
-      if (allowedOrigins.includes(normalizedOrigin)) {
-        return callback(null, true);
-      }
-
-      return callback(
-        new Error(`CORS blocked for origin: ${normalizedOrigin}`),
-      );
-    },
-    credentials: true,
-  }),
-);
 
 app.use(
   express.json({
@@ -74,6 +80,8 @@ app.get("/admin", (_req, res) => {
 app.get("/admin/", (_req, res) => {
   res.sendFile(path.join(projectRoot, "public", "admin", "index.html"));
 });
+
+app.use("/api", cors(corsOptionsDelegate));
 
 app.use("/api", (_req, res, next) => {
   res.setHeader(

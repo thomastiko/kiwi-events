@@ -145,13 +145,8 @@ function getServerPort() {
 }
 
 function getAppUrl() {
-  return resolveString(
-    ["KIWI_EVENTS_APP_URL"],
-    appConfig.server?.appUrl,
-    `http://localhost:${getServerPort()}`,
-  );
+  return resolveString(["KIWI_EVENTS_APP_URL"], appConfig.server?.appUrl);
 }
-
 function getActiveDatabaseProvider() {
   return normalizeLower(
     process.env.KIWI_EVENTS_DATABASE_PROVIDER ||

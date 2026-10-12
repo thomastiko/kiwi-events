@@ -1,6 +1,6 @@
 {
   "name": "kiwi-events",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "SEE LICENSE IN LICENSE",
   "description": "Generic headless event and ticketing backend with pluggable database, storage, and payment providers",
   "main": "src/server.js",

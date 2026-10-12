@@ -13,10 +13,10 @@ export const KIWI_EVENTS_CONFIG_DEFAULTS = {
   server: {
     nodeEnv: "development",
     port: 5001,
-    appUrl: "http://localhost:5001",
-    adminFrontendUrl: "http://localhost:5001/admin",
+    appUrl: "",
+    adminFrontendUrl: "",
     publicFrontendUrl: "",
-    corsOrigin: ["http://localhost:5001", "http://127.0.0.1:5001"],
+    corsOrigin: [],
   },
 
   database: {

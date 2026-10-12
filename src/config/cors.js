@@ -13,28 +13,37 @@ export function normalizeOrigin(origin) {
     return candidate.replace(/\/$/, "");
   }
 }
+export function isSameHostOrigin(origin, host) {
+  const normalizedOrigin = normalizeOrigin(origin);
+  const normalizedHost = String(host || "")
+    .trim()
+    .toLowerCase();
 
+  if (!normalizedOrigin || !normalizedHost) {
+    return false;
+  }
+
+  try {
+    const originUrl = new URL(normalizedOrigin);
+
+    if (!["http:", "https:"].includes(originUrl.protocol)) {
+      return false;
+    }
+
+    return originUrl.host.toLowerCase() === normalizedHost;
+  } catch {
+    return false;
+  }
+}
 export function buildAllowedOrigins() {
   const configuredOrigins = env.corsOrigins
     .map(normalizeOrigin)
     .filter(Boolean);
 
-  const appUrl = normalizeOrigin(env.appUrl);
-  const adminFrontendUrl = normalizeOrigin(env.adminFrontendUrl);
-  const publicFrontendUrl = normalizeOrigin(env.frontendUrl);
+  const adminFrontendOrigin = normalizeOrigin(env.adminFrontendUrl);
+  const publicFrontendOrigin = normalizeOrigin(env.frontendUrl);
 
-  const localServerOrigins = [
-    `http://localhost:${env.port}`,
-    `http://127.0.0.1:${env.port}`,
-  ];
-
-  return [
-    ...configuredOrigins,
-    appUrl,
-    adminFrontendUrl,
-    publicFrontendUrl,
-    ...localServerOrigins,
-  ]
+  return [...configuredOrigins, adminFrontendOrigin, publicFrontendOrigin]
     .map(normalizeOrigin)
     .filter(Boolean)
     .filter((origin, index, origins) => origins.indexOf(origin) === index);
