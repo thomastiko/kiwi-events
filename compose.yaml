@@ -1,6 +1,6 @@
 services:
   kiwi-events:
-    image: tikowiz/kiwi-events:1.0.1
+    image: tikowiz/kiwi-events:1.0.2
     ports:
       - "${KIWI_EVENTS_PORT:-5001}:5001"
     volumes:
