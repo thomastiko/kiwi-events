@@ -38,7 +38,7 @@ const EVENT_REMINDER_INTERVAL_MS =
 
 const FORCE_SHUTDOWN_TIMEOUT_MS = 10 * 1000;
 
-const DEFAULT_DOCUMENTATION_URL = "https://kiwi-events.tikowiz.com/#/docs";
+const DEFAULT_DOCUMENTATION_URL = "https://kiwi-events.tikowiz.com/docs";
 
 const require = createRequire(import.meta.url);
 const { version: packageVersion } = require("../package.json");
@@ -61,7 +61,7 @@ function formatStartupRow(label, value) {
 
 function printStartupBanner() {
   console.log("");
-  console.log("▲ kiwi-events");
+  console.log("kiwi events");
   console.log("");
   console.log("  Headless event ticketing backend");
   console.log("");
